@@ -300,9 +300,7 @@ void InitStory()
     IFont* pFont = new Font(g_pd3dDevice);
     pFont->Init();
 
-    // csvファイルから読むようにしたほうがいいような
-    // 別に必要ないような、微妙なところ。
-    // 巨大なゲームを作るわけじゃないし。
+    // <br>のような記号を改行として扱うようにしたほうがよい？
     std::vector<TalkBall> talkBallList;
     {
         TalkBall talkBall;
@@ -365,8 +363,9 @@ void InitStory()
         talkBall.SetCamera(camera);
         talkBallList.push_back(talkBall);
     }
+    ICamera* restore = new Camera(cameraEye, cameraAt);
 
-    talk->Init(pFont, pSE, sprTextBack, sprFade, talkBallList);
+    talk->Init(pFont, pSE, sprTextBack, sprFade, talkBallList, restore);
 }
 
 VOID Cleanup()

@@ -20,7 +20,8 @@ void Talk::Init(
     ISoundEffect* SE,
     ISprite* sprTextBack,
     ISprite* sprFade,
-    const std::vector<TalkBall>& pageList)
+    const std::vector<TalkBall>& pageList,
+    ICamera* restore)
 {
     m_font = font;
     m_SE = SE;
@@ -28,6 +29,7 @@ void Talk::Init(
     m_sprFade = sprFade;
     m_talkBallList = pageList;
     m_isFadeIn = true;
+    m_restore = restore;
 }
 
 void Talk::Next()
@@ -37,7 +39,7 @@ void Talk::Next()
         return;
     }
     int textIndex = m_talkBallList.at(m_pageIndex).GetTextIndex();
-    int textIndexMax = m_talkBallList.at(m_pageIndex).GetTextList().size();
+    int textIndexMax = (int)m_talkBallList.at(m_pageIndex).GetTextList().size();
     if (textIndex < textIndexMax - 1)
     {
         textIndex++;
@@ -124,6 +126,8 @@ void Talk::Render()
 
 void Talk::Finalize()
 {
+    m_restore->SetPosAndRot();
+
     for (std::size_t i = 0; i < m_talkBallList.size(); ++i)
     {
         delete m_talkBallList.at(i).GetCamera();

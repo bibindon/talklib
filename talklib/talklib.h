@@ -63,7 +63,8 @@ public:
         ISoundEffect* SE,
         ISprite* sprTextBack,
         ISprite* sprFade,
-        const std::vector<TalkBall>& talkBallList);
+        const std::vector<TalkBall>& talkBallList,
+        ICamera* restore);
 
     void Next();
     bool Update();
@@ -88,5 +89,7 @@ private:
 
     const int WAIT_NEXT_FRAME = 60;
     int m_waitNextCount = 0;
+
+    ICamera* m_restore = nullptr;
 };
 
