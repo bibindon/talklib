@@ -23,6 +23,9 @@
 
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
+D3DXVECTOR3 cameraEye = { 6.f, 4.f, 2.f };
+D3DXVECTOR3 cameraAt = { 0.f, 0.f, 0.f };
+
 class Sprite : public ISprite
 {
 public:
@@ -152,6 +155,24 @@ class SoundEffect : public ISoundEffect
     }
 };
 
+class Camera : public ICamera
+{
+public:
+    Camera(const D3DXVECTOR3& eye, const D3DXVECTOR3& at)
+        : m_eye(eye)
+        , m_at(at)
+    {
+    }
+    virtual void SetPosAndRot()
+    {
+        cameraEye = m_eye;
+        cameraAt = m_at;
+    }
+private:
+    D3DXVECTOR3 m_eye;
+    D3DXVECTOR3 m_at;
+};
+
 LPDIRECT3D9 g_pD3D = NULL;
 LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
 LPD3DXFONT g_pFont = NULL;
@@ -161,10 +182,9 @@ LPDIRECT3DTEXTURE9* pTextures = NULL;
 DWORD dwNumMaterials = 0;
 LPD3DXEFFECT pEffect = NULL;
 D3DXMATERIAL* d3dxMaterials = NULL;
-float f = 0.0f;
 bool bFinish = false;
 
-StoryTelling* story = nullptr;
+Talk* talk = nullptr;
 
 void TextDraw(LPD3DXFONT pFont, char* text, int X, int Y)
 {
@@ -283,12 +303,9 @@ void InitStory()
     // csvファイルから読むようにしたほうがいいような
     // 別に必要ないような、微妙なところ。
     // 巨大なゲームを作るわけじゃないし。
-    std::vector<Page> pageList;
+    std::vector<TalkBall> talkBallList;
     {
-        Page page;
-        Sprite* sprite = new Sprite(g_pd3dDevice);
-        sprite->Load("opening01.png");
-        page.SetSprite(sprite);
+        TalkBall talkBall;
         std::vector<std::vector<std::string> > vss;
         std::vector<std::string> vs;
         vs.push_back("サンプルテキスト１");
@@ -305,14 +322,13 @@ void InitStory()
         vs.push_back("サンプルテキスト８サンプルテキスト８サンプルテキスト８サンプルテキスト８サンプルテキスト８");
         vs.push_back("サンプルテキスト９サンプルテキスト９サンプルテキスト９サンプルテキスト９サンプルテキスト９");
         vss.push_back(vs);
-        page.SetTextList(vss);
-        pageList.push_back(page);
+        talkBall.SetTextList(vss);
+        ICamera* camera = new Camera(D3DXVECTOR3 { 1.2f,1.2f,3.f }, D3DXVECTOR3 { 1.2f,1.f,0.f });
+        talkBall.SetCamera(camera);
+        talkBallList.push_back(talkBall);
     }
     {
-        Page page;
-        Sprite* sprite = new Sprite(g_pd3dDevice);
-        sprite->Load("opening02.png");
-        page.SetSprite(sprite);
+        TalkBall talkBall;
         std::vector<std::vector<std::string> > vss;
         std::vector<std::string> vs;
         vs.push_back("サンプルテキストＡ");
@@ -324,14 +340,13 @@ void InitStory()
         vs.push_back("サンプルテキストＥサンプルテキストＥ");
         vs.push_back("サンプルテキストＦ");
         vss.push_back(vs);
-        page.SetTextList(vss);
-        pageList.push_back(page);
+        talkBall.SetTextList(vss);
+        ICamera* camera = new Camera(D3DXVECTOR3 { -2, 2, 6 }, D3DXVECTOR3 { -2, 0, 0 });
+        talkBall.SetCamera(camera);
+        talkBallList.push_back(talkBall);
     }
     {
-        Page page;
-        Sprite* sprite = new Sprite(g_pd3dDevice);
-        sprite->Load("opening03.png");
-        page.SetSprite(sprite);
+        TalkBall talkBall;
         std::vector<std::vector<std::string> > vss;
         std::vector<std::string> vs;
         vs.push_back("１１１１１１１１１１１");
@@ -345,11 +360,13 @@ void InitStory()
         vs.clear();
         vs.push_back("５５５５５５５５５５５５５５５５５");
         vss.push_back(vs);
-        page.SetTextList(vss);
-        pageList.push_back(page);
+        talkBall.SetTextList(vss);
+        ICamera* camera = new Camera(D3DXVECTOR3 { 1.2f, 1.2f, 3.f }, D3DXVECTOR3 { 1.2f, 1.f, 0.f });
+        talkBall.SetCamera(camera);
+        talkBallList.push_back(talkBall);
     }
 
-    story->Init(pFont, pSE, sprTextBack, sprFade, pageList);
+    talk->Init(pFont, pSE, sprTextBack, sprFade, talkBallList);
 }
 
 VOID Cleanup()
@@ -371,27 +388,27 @@ VOID Render()
     {
         return;
     }
-    f += 0.010f;
+    //rotateCamera += 0.010f;
 
     D3DXMATRIX mat;
     D3DXMATRIX View, Proj;
     D3DXMatrixPerspectiveFovLH(&Proj, D3DXToRadian(45), 1600.0f / 900.0f, 1.0f, 10000.0f);
-    D3DXVECTOR3 vec1(3 * sinf(f), 3, -3 * cosf(f));
-    D3DXVECTOR3 vec2(0, 0, 0);
+    D3DXVECTOR3 vec1(cameraEye);
+    D3DXVECTOR3 vec2(cameraAt);
     D3DXVECTOR3 vec3(0, 1, 0);
     D3DXMatrixLookAtLH(&View, &vec1, &vec2, &vec3);
     D3DXMatrixIdentity(&mat);
     mat = mat * View * Proj;
     pEffect->SetMatrix("matWorldViewProj", &mat);
 
-    if (story != nullptr)
+    if (talk != nullptr)
     {
-        bFinish = story->Update();
+        bFinish = talk->Update();
         if (bFinish)
         {
-            story->Finalize();
-            delete story;
-            story = nullptr;
+            talk->Finalize();
+            delete talk;
+            talk = nullptr;
         }
     }
 
@@ -401,7 +418,7 @@ VOID Render()
     if (SUCCEEDED(g_pd3dDevice->BeginScene()))
     {
         char msg[128];
-        strcpy_s(msg, 128, "Ｍキーで紙芝居開始");
+        strcpy_s(msg, 128, "Ｍキーで会話開始");
         TextDraw(g_pFont, msg, 0, 0);
 
         pEffect->SetTechnique("BasicTec");
@@ -413,9 +430,9 @@ VOID Render()
             pEffect->SetTexture("texture1", pTextures[i]);
             pMesh->DrawSubset(i);
         }
-        if (story != nullptr)
+        if (talk != nullptr)
         {
-            story->Render();
+            talk->Render();
         }
         pEffect->CommitChanges();
         pEffect->EndPass();
@@ -445,20 +462,20 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
         case 'M':
         {
-            if (story != nullptr)
+            if (talk != nullptr)
             {
-                story->Finalize();
-                delete story;
+                talk->Finalize();
+                delete talk;
             }
-            story = new StoryTelling();
+            talk = new Talk();
             InitStory();
             break;
         }
         case VK_RETURN:
         {
-            if (story != nullptr)
+            if (talk != nullptr)
             {
-                story->Next();
+                talk->Next();
             }
             break;
         }
@@ -469,9 +486,9 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     case WM_LBUTTONDOWN:
     {
-        if (story != nullptr)
+        if (talk != nullptr)
         {
-            story->Next();
+            talk->Next();
         }
         break;
     }

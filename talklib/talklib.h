@@ -27,11 +27,16 @@ public:
     virtual ~ISoundEffect() {};
 };
 
-class Page
+class ICamera
 {
 public:
-    ISprite* GetSprite() const;
-    void SetSprite(ISprite* sprite);
+    virtual void SetPosAndRot() = 0;
+    virtual ~ICamera() {};
+};
+
+class TalkBall
+{
+public:
 
     std::vector<std::vector<std::string>> GetTextList() const;
     void SetTextList(const std::vector<std::vector<std::string>>& textList);
@@ -39,14 +44,17 @@ public:
     int GetTextIndex() const;
     void SetTextIndex(const int index);
 
+    ICamera* GetCamera() const;
+    void SetCamera(ICamera* const camera);
+
 private:
 
-    ISprite* m_sprite = nullptr;
     std::vector<std::vector<std::string>> m_textList;
     int m_textIndex = 0;
+    ICamera* m_camera = nullptr;
 };
 
-class StoryTelling
+class Talk
 {
 public:
 
@@ -55,7 +63,7 @@ public:
         ISoundEffect* SE,
         ISprite* sprTextBack,
         ISprite* sprFade,
-        const std::vector<Page>& pageList);
+        const std::vector<TalkBall>& talkBallList);
 
     void Next();
     bool Update();
@@ -68,7 +76,7 @@ private:
     ISprite* m_sprTextBack;
     IFont* m_font;
     ISoundEffect* m_SE;
-    std::vector<Page> m_pageList;
+    std::vector<TalkBall> m_talkBallList;
     int m_pageIndex = 0;
 
     ISprite* m_sprFade;
