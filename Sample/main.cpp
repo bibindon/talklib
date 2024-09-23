@@ -4,9 +4,7 @@
 #else
 #pragma comment( lib, "d3dx9.lib" )
 #endif
-
 #pragma comment (lib, "winmm.lib")
-
 #pragma comment( lib, "talklib.lib" )
 
 #include "..\talklib\talklib.h"
@@ -20,7 +18,6 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
-
 #define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = NULL; } }
 
 D3DXVECTOR3 cameraEye = { 6.f, 4.f, 2.f };
@@ -29,7 +26,6 @@ D3DXVECTOR3 cameraAt = { 0.f, 0.f, 0.f };
 class Sprite : public ISprite
 {
 public:
-
     Sprite(LPDIRECT3DDEVICE9 dev)
         : m_pD3DDevice(dev)
     {
@@ -51,7 +47,6 @@ public:
 
     void Load(const std::string& filepath) override
     {
-        LPD3DXSPRITE tempSprite { nullptr };
         if (FAILED(D3DXCreateSprite(m_pD3DDevice, &m_D3DSprite)))
         {
             throw std::exception("Failed to create a sprite.");
@@ -71,16 +66,17 @@ public:
         m_height = desc.Height;
     }
 
-    ~Sprite()
+    ~Sprite() override
     {
         m_D3DSprite->Release();
+        m_D3DSprite->Release();
         m_D3DSprite = nullptr;
+        m_pD3DTexture->Release();
         m_pD3DTexture->Release();
         m_pD3DTexture = nullptr;
     }
 
 private:
-
     LPDIRECT3DDEVICE9 m_pD3DDevice = NULL;
     LPD3DXSPRITE m_D3DSprite = NULL;
     LPDIRECT3DTEXTURE9 m_pD3DTexture = NULL;
@@ -91,7 +87,6 @@ private:
 class Font : public IFont
 {
 public:
-
     Font(LPDIRECT3DDEVICE9 pD3DDevice)
         : m_pD3DDevice(pD3DDevice)
     {
@@ -120,14 +115,14 @@ public:
             D3DCOLOR_ARGB(255, 255, 255, 255));
     }
 
-    ~Font()
+    ~Font() override
     {
+        m_pFont->Release();
         m_pFont->Release();
         m_pFont = nullptr;
     }
 
 private:
-
     LPDIRECT3DDEVICE9 m_pD3DDevice = NULL;
     LPD3DXFONT m_pFont = NULL;
 };
@@ -181,7 +176,7 @@ LPD3DXEFFECT pEffect = NULL;
 
 bool bFinish = false;
 
-Talk* talk = nullptr;
+Talk* g_talk = nullptr;
 
 void TextDraw(LPD3DXFONT pFont, char* text, int X, int Y)
 {
@@ -246,9 +241,9 @@ HRESULT InitD3D(HWND hWnd)
         return(E_FAIL);
     }
 
-    LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
 
     {
+        LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
         if (FAILED(D3DXLoadMeshFromX("cube.x",
                                      D3DXMESH_SYSTEMMEM,
                                      g_pd3dDevice,
@@ -280,8 +275,10 @@ HRESULT InitD3D(HWND hWnd)
                 }
             }
         }
+        pD3DXMtrlBuffer->Release();
     }
     {
+        LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
         if (FAILED(D3DXLoadMeshFromX("tiger.x",
                                      D3DXMESH_SYSTEMMEM,
                                      g_pd3dDevice,
@@ -313,8 +310,8 @@ HRESULT InitD3D(HWND hWnd)
                 }
             }
         }
+        pD3DXMtrlBuffer->Release();
     }
-    pD3DXMtrlBuffer->Release();
 
     D3DXCreateEffectFromFile(g_pd3dDevice,
                              "simple.fx",
@@ -338,13 +335,20 @@ void InitTalk()
     Sprite* sprFade = new Sprite(g_pd3dDevice);
     ICamera* camera = new Camera();
 
-    talk->Init("talkSample.csv", pFont, pSE, sprTextBack, sprFade, camera,
+    g_talk->Init("talkSample.csv", pFont, pSE, sprTextBack, sprFade, camera,
                cameraEye.x, cameraEye.y, cameraEye.z,
                cameraAt.x, cameraAt.y, cameraAt.z);
 }
 
 VOID Cleanup()
 {
+    if (g_talk != nullptr)
+    {
+        g_talk->Finalize();
+        delete g_talk;
+        g_talk = nullptr;
+    }
+
     SAFE_RELEASE(pEffect);
 
     for (DWORD i = 0; i < dwNumMaterials2; ++i)
@@ -360,6 +364,7 @@ VOID Cleanup()
 
     for (DWORD i = 0; i < dwNumMaterials; ++i)
     {
+        pTextures[i]->Release();
         SAFE_RELEASE(pTextures[i]);
     }
     delete[] pTextures;
@@ -402,14 +407,14 @@ VOID Render()
     mat1 = mat1 * World * View * Proj;
     mat2 = mat2 * World2 * View * Proj;
 
-    if (talk != nullptr)
+    if (g_talk != nullptr)
     {
-        bFinish = talk->Update();
+        bFinish = g_talk->Update();
         if (bFinish)
         {
-            talk->Finalize();
-            delete talk;
-            talk = nullptr;
+            g_talk->Finalize();
+            delete g_talk;
+            g_talk = nullptr;
         }
     }
 
@@ -448,9 +453,9 @@ VOID Render()
             pEffect->EndPass();
         }
         pEffect->End();
-        if (talk != nullptr)
+        if (g_talk != nullptr)
         {
-            talk->Render();
+            g_talk->Render();
         }
         g_pd3dDevice->EndScene();
     }
@@ -477,20 +482,20 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
         case 'M':
         {
-            if (talk != nullptr)
+            if (g_talk != nullptr)
             {
-                talk->Finalize();
-                delete talk;
+                g_talk->Finalize();
+                delete g_talk;
             }
-            talk = new Talk();
+            g_talk = new Talk();
             InitTalk();
             break;
         }
         case VK_RETURN:
         {
-            if (talk != nullptr)
+            if (g_talk != nullptr)
             {
-                talk->Next();
+                g_talk->Next();
             }
             break;
         }
@@ -501,9 +506,9 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     case WM_LBUTTONDOWN:
     {
-        if (talk != nullptr)
+        if (g_talk != nullptr)
         {
-            talk->Next();
+            g_talk->Next();
         }
         break;
     }

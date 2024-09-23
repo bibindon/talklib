@@ -142,23 +142,26 @@ void Talk::Render()
 
 void Talk::Finalize()
 {
-    m_camera->SetPosAndRot(m_restoreEyeX,    m_restoreEyeY,    m_restoreEyeZ,
-                           m_restoreLookAtX, m_restoreLookAtY, m_restoreLookAtZ);
+    if (m_camera != nullptr)
+    {
+        m_camera->SetPosAndRot(m_restoreEyeX,    m_restoreEyeY,    m_restoreEyeZ,
+                               m_restoreLookAtX, m_restoreLookAtY, m_restoreLookAtZ);
+    }
 
     delete m_camera;
     m_camera = nullptr;
 
-    delete m_sprTextBack;
-    m_sprTextBack = nullptr;
-
     delete m_sprFade;
     m_sprFade = nullptr;
 
-    delete m_font;
-    m_font = nullptr;
+    delete m_sprTextBack;
+    m_sprTextBack = nullptr;
 
     delete m_SE;
     m_SE = nullptr;
+
+    delete m_font;
+    m_font = nullptr;
 }
 
 void TalkBall::Init(const std::vector<std::string>& csvOneLine,
