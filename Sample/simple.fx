@@ -1,5 +1,6 @@
 float4x4 matWorldViewProj;
 float4 lightNormal = { 0.3f, 1.0f, 0.5f, 0.0f };
+float4 ambient = { 0.2f, 0.2f, 0.2f, 1.0f };
 
 texture texture1;
 sampler textureSampler = sampler_state {
@@ -21,8 +22,7 @@ void vertex_shader(
     out_position = mul(in_position, matWorldViewProj);
 
     float light_intensity = dot(in_normal, lightNormal);
-    out_diffuse.rgb = max(0, light_intensity);
-    out_diffuse.a = 1.0f;
+    out_diffuse = max(0, light_intensity) + ambient;
 
     out_texcood = in_texcood;
 }

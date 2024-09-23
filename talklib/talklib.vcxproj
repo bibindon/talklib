@@ -19,10 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="HeaderOnlyCsv.hpp" />
     <ClInclude Include="talklib.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="talklib.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\Sample\simple.fx">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">2.0</ShaderModel>
+    </FxCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

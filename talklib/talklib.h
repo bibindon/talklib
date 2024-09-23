@@ -22,7 +22,8 @@ public:
 class ISoundEffect
 {
 public:
-    virtual void PlayMove() = 0;
+    virtual void PlayMessage() = 0;
+    virtual void Stop() = 0;
     virtual void Init() = 0;
     virtual ~ISoundEffect() {};
 };
@@ -30,55 +31,67 @@ public:
 class ICamera
 {
 public:
-    virtual void SetPosAndRot() = 0;
+    virtual void SetPosAndRot(const float posX, const float posY, const float posZ,
+                              const float AtX, const float AtY, const float AtZ) = 0;
     virtual ~ICamera() {};
 };
 
 class TalkBall
 {
 public:
-
-    std::vector<std::vector<std::string>> GetTextList() const;
-    void SetTextList(const std::vector<std::vector<std::string>>& textList);
-
-    int GetTextIndex() const;
-    void SetTextIndex(const int index);
-
-    ICamera* GetCamera() const;
-    void SetCamera(ICamera* const camera);
+    void Init(const std::vector<std::string>& csvOneLine,
+              IFont* font,
+              ISprite* sprite,
+              ISoundEffect* SE,
+              ICamera* camera);
+    void Update();
+    void Render();
 
 private:
-
-    std::vector<std::vector<std::string>> m_textList;
+    std::vector<std::string> m_text;
     int m_textIndex = 0;
+    IFont* m_font = nullptr;
+    ISprite* m_sprite = nullptr;
+    ISoundEffect* m_SE = nullptr;
     ICamera* m_camera = nullptr;
+
+    float m_EyeX = 0.f;
+    float m_EyeY = 0.f;
+    float m_EyeZ = 0.f;
+    float m_LookAtX = 0.f;
+    float m_LookAtY = 0.f;
+    float m_LookAtZ = 0.f;
 };
 
 class Talk
 {
 public:
 
-    void Init(
-        IFont* font,
-        ISoundEffect* SE,
-        ISprite* sprTextBack,
-        ISprite* sprFade,
-        const std::vector<TalkBall>& talkBallList,
-        ICamera* restore);
-
+    void Init(const std::string& csvFilename,
+              IFont* font,
+              ISoundEffect* SE,
+              ISprite* sprTextBack,
+              ISprite* sprFade,
+              ICamera* camera,
+              const float eyeX,
+              const float eyeY,
+              const float eyeZ,
+              const float lookAtX,
+              const float lookAtY,
+              const float lookAtZ);
+    std::vector<TalkBall> CreateTalkList();
     void Next();
     bool Update();
     void Render();
-
     void Finalize();
 
 private:
-
+    std::string m_csvfilepath;
     ISprite* m_sprTextBack;
     IFont* m_font;
     ISoundEffect* m_SE;
     std::vector<TalkBall> m_talkBallList;
-    int m_pageIndex = 0;
+    int m_talkBallIndex = 0;
 
     ISprite* m_sprFade;
     const int FADE_FRAME_MAX = 30;
@@ -90,6 +103,14 @@ private:
     const int WAIT_NEXT_FRAME = 60;
     int m_waitNextCount = 0;
 
-    ICamera* m_restore = nullptr;
+    ICamera* m_camera = nullptr;
+
+    float m_restoreEyeX = 0.f;
+    float m_restoreEyeY = 0.f;
+    float m_restoreEyeZ = 0.f;
+    float m_restoreLookAtX = 0.f;
+    float m_restoreLookAtY = 0.f;
+    float m_restoreLookAtZ = 0.f;
+
 };
 

@@ -145,43 +145,50 @@ private:
 
 class SoundEffect : public ISoundEffect
 {
-    virtual void PlayMove() override
+    void Init() override
     {
-        PlaySound("cursor_move.wav", NULL, SND_FILENAME | SND_ASYNC);
     }
-    virtual void Init() override
-    {
 
+    void PlayMessage() override
+    {
+        PlaySound("message1.wav", NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
+    }
+
+    void Stop() override
+    {
+        PlaySound(NULL, NULL, 0);
     }
 };
 
 class Camera : public ICamera
 {
 public:
-    Camera(const D3DXVECTOR3& eye, const D3DXVECTOR3& at)
-        : m_eye(eye)
-        , m_at(at)
+    void SetPosAndRot(const float posX, const float posY, const float posZ,
+                      const float AtX,  const float AtY,  const float AtZ) override
     {
+        cameraEye = D3DXVECTOR3(posX, posY, posZ);
+        cameraAt  = D3DXVECTOR3(AtX, AtY, AtZ);
     }
-    virtual void SetPosAndRot()
-    {
-        cameraEye = m_eye;
-        cameraAt = m_at;
-    }
-private:
-    D3DXVECTOR3 m_eye;
-    D3DXVECTOR3 m_at;
 };
 
 LPDIRECT3D9 g_pD3D = NULL;
 LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
 LPD3DXFONT g_pFont = NULL;
+
 LPD3DXMESH pMesh = NULL;
 D3DMATERIAL9* pMaterials = NULL;
 LPDIRECT3DTEXTURE9* pTextures = NULL;
 DWORD dwNumMaterials = 0;
-LPD3DXEFFECT pEffect = NULL;
 D3DXMATERIAL* d3dxMaterials = NULL;
+
+LPD3DXMESH pMesh2 = NULL;
+D3DMATERIAL9* pMaterials2 = NULL;
+LPDIRECT3DTEXTURE9* pTextures2 = NULL;
+DWORD dwNumMaterials2 = 0;
+D3DXMATERIAL* d3dxMaterials2 = NULL;
+
+LPD3DXEFFECT pEffect = NULL;
+
 bool bFinish = false;
 
 Talk* talk = nullptr;
@@ -242,45 +249,74 @@ HRESULT InitD3D(HWND hWnd)
 
     LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
 
-    if (FAILED(D3DXLoadMeshFromX("cube.x", D3DXMESH_SYSTEMMEM,
-        g_pd3dDevice, NULL, &pD3DXMtrlBuffer, NULL,
-        &dwNumMaterials, &pMesh)))
     {
-        MessageBox(NULL, "Xファイルの読み込みに失敗しました", NULL, MB_OK);
-        return E_FAIL;
-    }
-    d3dxMaterials = (D3DXMATERIAL*)pD3DXMtrlBuffer->GetBufferPointer();
-    pMaterials = new D3DMATERIAL9[dwNumMaterials];
-    pTextures = new LPDIRECT3DTEXTURE9[dwNumMaterials];
-
-    for (DWORD i = 0; i < dwNumMaterials; i++)
-    {
-        pMaterials[i] = d3dxMaterials[i].MatD3D;
-        pMaterials[i].Ambient = pMaterials[i].Diffuse;
-        pTextures[i] = NULL;
-        if (d3dxMaterials[i].pTextureFilename != NULL &&
-            lstrlen(d3dxMaterials[i].pTextureFilename) > 0)
+        if (FAILED(D3DXLoadMeshFromX("cube.x", D3DXMESH_SYSTEMMEM,
+            g_pd3dDevice, NULL, &pD3DXMtrlBuffer, NULL,
+            &dwNumMaterials, &pMesh)))
         {
-            if (FAILED(D3DXCreateTextureFromFile(g_pd3dDevice,
-                d3dxMaterials[i].pTextureFilename,
-                &pTextures[i])))
+            MessageBox(NULL, "Xファイルの読み込みに失敗しました", NULL, MB_OK);
+            return E_FAIL;
+        }
+        d3dxMaterials = (D3DXMATERIAL*)pD3DXMtrlBuffer->GetBufferPointer();
+        pMaterials = new D3DMATERIAL9[dwNumMaterials];
+        pTextures = new LPDIRECT3DTEXTURE9[dwNumMaterials];
+
+        for (DWORD i = 0; i < dwNumMaterials; i++)
+        {
+            pMaterials[i] = d3dxMaterials[i].MatD3D;
+            pMaterials[i].Ambient = pMaterials[i].Diffuse;
+            pTextures[i] = NULL;
+            if (d3dxMaterials[i].pTextureFilename != NULL &&
+                lstrlen(d3dxMaterials[i].pTextureFilename) > 0)
             {
-                MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+                if (FAILED(D3DXCreateTextureFromFile(g_pd3dDevice,
+                    d3dxMaterials[i].pTextureFilename,
+                    &pTextures[i])))
+                {
+                    MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+                }
+            }
+        }
+    }
+    {
+        if (FAILED(D3DXLoadMeshFromX("tiger.x", D3DXMESH_SYSTEMMEM,
+            g_pd3dDevice, NULL, &pD3DXMtrlBuffer, NULL,
+            &dwNumMaterials2, &pMesh2)))
+        {
+            MessageBox(NULL, "Xファイルの読み込みに失敗しました", NULL, MB_OK);
+            return E_FAIL;
+        }
+        d3dxMaterials2 = (D3DXMATERIAL*)pD3DXMtrlBuffer->GetBufferPointer();
+        pMaterials2 = new D3DMATERIAL9[dwNumMaterials2];
+        pTextures2 = new LPDIRECT3DTEXTURE9[dwNumMaterials2];
+
+        for (DWORD i = 0; i < dwNumMaterials2; i++)
+        {
+            pMaterials2[i] = d3dxMaterials2[i].MatD3D;
+            pMaterials2[i].Ambient = pMaterials2[i].Diffuse;
+            pTextures2[i] = NULL;
+            if (d3dxMaterials2[i].pTextureFilename != NULL &&
+                lstrlen(d3dxMaterials2[i].pTextureFilename) > 0)
+            {
+                if (FAILED(D3DXCreateTextureFromFile(g_pd3dDevice,
+                    d3dxMaterials2[i].pTextureFilename,
+                    &pTextures2[i])))
+                {
+                    MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+                }
             }
         }
     }
     pD3DXMtrlBuffer->Release();
 
-    D3DXCreateEffectFromFile(
-        g_pd3dDevice,
-        "simple.fx",
-        NULL,
-        NULL,
-        D3DXSHADER_DEBUG,
-        NULL,
-        &pEffect,
-        NULL
-    );
+    D3DXCreateEffectFromFile(g_pd3dDevice,
+                             "simple.fx",
+                             NULL,
+                             NULL,
+                             D3DXSHADER_DEBUG,
+                             NULL,
+                             &pEffect,
+                             NULL);
 
     return S_OK;
 }
@@ -289,88 +325,21 @@ void InitStory()
 {
     // newはライブラリの使用者がするが、deleteはライブラリ内で行われる。
     // ちょっと良くないけど・・・まぁよし！
-    ISoundEffect* pSE = new SoundEffect();
-
-    Sprite* sprTextBack = new Sprite(g_pd3dDevice);
-    sprTextBack->Load("textBack.png");
-
-    Sprite* sprFade = new Sprite(g_pd3dDevice);
-    sprFade->Load("black.png");
-
     IFont* pFont = new Font(g_pd3dDevice);
-    pFont->Init();
+    ISoundEffect* pSE = new SoundEffect();
+    Sprite* sprTextBack = new Sprite(g_pd3dDevice);
+    Sprite* sprFade = new Sprite(g_pd3dDevice);
+    ICamera* camera = new Camera();
 
-    // <br>のような記号を改行として扱うようにしたほうがよい？
-    std::vector<TalkBall> talkBallList;
-    {
-        TalkBall talkBall;
-        std::vector<std::vector<std::string> > vss;
-        std::vector<std::string> vs;
-        vs.push_back("サンプルテキスト１");
-        vs.push_back("サンプルテキスト２");
-        vs.push_back("サンプルテキスト３");
-        vss.push_back(vs);
-        vs.clear();
-        vs.push_back("サンプルテキスト４サンプルテキスト４サンプルテキスト４");
-        vs.push_back("サンプルテキスト５サンプルテキスト５サンプルテキスト５");
-        vs.push_back("サンプルテキスト６サンプルテキスト６サンプルテキスト６");
-        vss.push_back(vs);
-        vs.clear();
-        vs.push_back("サンプルテキスト７サンプルテキスト７サンプルテキスト７サンプルテキスト７サンプルテキスト７");
-        vs.push_back("サンプルテキスト８サンプルテキスト８サンプルテキスト８サンプルテキスト８サンプルテキスト８");
-        vs.push_back("サンプルテキスト９サンプルテキスト９サンプルテキスト９サンプルテキスト９サンプルテキスト９");
-        vss.push_back(vs);
-        talkBall.SetTextList(vss);
-        ICamera* camera = new Camera(D3DXVECTOR3 { 1.2f,1.2f,3.f }, D3DXVECTOR3 { 1.2f,1.f,0.f });
-        talkBall.SetCamera(camera);
-        talkBallList.push_back(talkBall);
-    }
-    {
-        TalkBall talkBall;
-        std::vector<std::vector<std::string> > vss;
-        std::vector<std::string> vs;
-        vs.push_back("サンプルテキストＡ");
-        vs.push_back("サンプルテキストＢ");
-        vs.push_back("サンプルテキストＣ");
-        vss.push_back(vs);
-        vs.clear();
-        vs.push_back("サンプルテキストＤサンプルテキストＤサンプルテキストＤ");
-        vs.push_back("サンプルテキストＥサンプルテキストＥ");
-        vs.push_back("サンプルテキストＦ");
-        vss.push_back(vs);
-        talkBall.SetTextList(vss);
-        ICamera* camera = new Camera(D3DXVECTOR3 { -2, 2, 6 }, D3DXVECTOR3 { -2, 0, 0 });
-        talkBall.SetCamera(camera);
-        talkBallList.push_back(talkBall);
-    }
-    {
-        TalkBall talkBall;
-        std::vector<std::vector<std::string> > vss;
-        std::vector<std::string> vs;
-        vs.push_back("１１１１１１１１１１１");
-        vs.push_back("２２２２２２２２２２２２２");
-        vs.push_back("３３３３３３３３３３３３３３３３３");
-        vss.push_back(vs);
-        vs.clear();
-        vs.push_back("４４４４４４４４４４４４４４４４４４４４４４４４４４４４４４４４４");
-        vs.push_back("");
-        vss.push_back(vs);
-        vs.clear();
-        vs.push_back("５５５５５５５５５５５５５５５５５");
-        vss.push_back(vs);
-        talkBall.SetTextList(vss);
-        ICamera* camera = new Camera(D3DXVECTOR3 { 1.2f, 1.2f, 3.f }, D3DXVECTOR3 { 1.2f, 1.f, 0.f });
-        talkBall.SetCamera(camera);
-        talkBallList.push_back(talkBall);
-    }
-    ICamera* restore = new Camera(cameraEye, cameraAt);
-
-    talk->Init(pFont, pSE, sprTextBack, sprFade, talkBallList, restore);
+    talk->Init("talkSample.csv", pFont, pSE, sprTextBack, sprFade, camera,
+               cameraEye.x, cameraEye.y, cameraEye.z,
+               cameraAt.x, cameraAt.y, cameraAt.z);
 }
 
 VOID Cleanup()
 {
     SAFE_RELEASE(pMesh);
+    SAFE_RELEASE(pMesh2);
     SAFE_RELEASE(g_pFont);
     delete[] pMaterials;
     pMaterials = nullptr;
@@ -387,18 +356,28 @@ VOID Render()
     {
         return;
     }
-    //rotateCamera += 0.010f;
 
-    D3DXMATRIX mat;
+    D3DXMATRIX mat1;
+    D3DXMATRIX mat2;
+
+    D3DXMATRIX World;
+    D3DXMatrixIdentity(&World);
+    D3DXMatrixTranslation(&World, 0, 0, -2);
+
+    D3DXMATRIX World2;
+    D3DXMatrixIdentity(&World2);
+    D3DXMatrixTranslation(&World2, 0, 0, 2);
+
     D3DXMATRIX View, Proj;
     D3DXMatrixPerspectiveFovLH(&Proj, D3DXToRadian(45), 1600.0f / 900.0f, 1.0f, 10000.0f);
     D3DXVECTOR3 vec1(cameraEye);
     D3DXVECTOR3 vec2(cameraAt);
     D3DXVECTOR3 vec3(0, 1, 0);
     D3DXMatrixLookAtLH(&View, &vec1, &vec2, &vec3);
-    D3DXMatrixIdentity(&mat);
-    mat = mat * View * Proj;
-    pEffect->SetMatrix("matWorldViewProj", &mat);
+    D3DXMatrixIdentity(&mat1);
+    D3DXMatrixIdentity(&mat2);
+    mat1 = mat1 * World * View * Proj;
+    mat2 = mat2 * World2 * View * Proj;
 
     if (talk != nullptr)
     {
@@ -419,23 +398,39 @@ VOID Render()
         char msg[128];
         strcpy_s(msg, 128, "Ｍキーで会話開始");
         TextDraw(g_pFont, msg, 0, 0);
-
-        pEffect->SetTechnique("BasicTec");
         UINT numPass;
         pEffect->Begin(&numPass, 0);
-        pEffect->BeginPass(0);
-        for (DWORD i = 0; i < dwNumMaterials; i++)
         {
-            pEffect->SetTexture("texture1", pTextures[i]);
-            pMesh->DrawSubset(i);
+            pEffect->SetMatrix("matWorldViewProj", &mat1);
+            pEffect->SetTechnique("BasicTec");
+            pEffect->BeginPass(0);
+            for (DWORD i = 0; i < dwNumMaterials; i++)
+            {
+                pEffect->SetTexture("texture1", pTextures[i]);
+                pEffect->CommitChanges();
+                pMesh->DrawSubset(i);
+            }
+            pEffect->EndPass();
         }
+        {
+            pEffect->SetMatrix("matWorldViewProj", &mat2);
+            pEffect->SetTechnique("BasicTec");
+            UINT numPass;
+            pEffect->BeginPass(0);
+            pEffect->SetMatrix("matWorldViewProj", &mat2);
+            for (DWORD i = 0; i < dwNumMaterials2; i++)
+            {
+                pEffect->SetTexture("texture1", pTextures2[i]);
+                pEffect->CommitChanges();
+                pMesh2->DrawSubset(i);
+            }
+            pEffect->EndPass();
+        }
+        pEffect->End();
         if (talk != nullptr)
         {
             talk->Render();
         }
-        pEffect->CommitChanges();
-        pEffect->EndPass();
-        pEffect->End();
         g_pd3dDevice->EndScene();
     }
 
@@ -478,7 +473,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        case VK_ESCAPE:
+        case 'Q':
             PostQuitMessage(0);
             break;
         }
@@ -512,7 +507,7 @@ INT WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
     rect.left = 0;
 
     HWND hWnd = CreateWindow("Window1", "Hello DirectX9 World !!",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rect.right, rect.bottom,
+        WS_OVERLAPPEDWINDOW, 10, 10, rect.right, rect.bottom,
         NULL, NULL, wc.hInstance, NULL);
 
     if (SUCCEEDED(InitD3D(hWnd)))
