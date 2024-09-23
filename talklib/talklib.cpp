@@ -70,41 +70,32 @@ std::vector<TalkBall> Talk::CreateTalkList()
 
 void Talk::Next()
 {
-    m_talkBallIndex++;
-    /*
     if (m_waitNextCount < WAIT_NEXT_FRAME)
     {
         return;
     }
-    int textIndex = m_talkBallList.at(m_talkBallIndex).GetTextIndex();
-    int textIndexMax = (int)m_talkBallList.at(m_talkBallIndex).GetTextList().size();
-    if (textIndex < textIndexMax - 1)
+
+    if (m_talkBallList.at(m_talkBallIndex).IsFinish() == false)
     {
-        textIndex++;
+        return;
+    }
+
+    if (m_talkBallIndex < (int)m_talkBallList.size() - 1)
+    {
+        m_talkBallIndex++;
     }
     else
     {
-        if (m_talkBallIndex <= (int)m_talkBallList.size() - 2)
-        {
-            textIndex = 0;
-            m_talkBallIndex++;
-        }
-        else
-        {
-            m_FadeOutCount = 0;
-            m_isFadeOut = true;
-        }
+        m_FadeOutCount = 0;
+        m_isFadeOut = true;
     }
-    m_talkBallList.at(m_talkBallIndex).SetTextIndex(textIndex);
-    m_SE->Play();
     m_waitNextCount = 0;
-    */
+
 }
 
 // 戻り値は会話終了フラグ
 bool Talk::Update()
 {
-    /*
     bool isFinish = false;
     m_waitNextCount++;
     if (m_isFadeIn)
@@ -130,43 +121,14 @@ bool Talk::Update()
             isFinish = true;
         }
     }
+    m_talkBallList.at(m_talkBallIndex).Update();
+
     return isFinish;
-    */
-    bool finish = false;
-    if (m_talkBallIndex <= m_talkBallList.size() - 1)
-    {
-        m_talkBallList.at(m_talkBallIndex).Update();
-    }
-    else
-    {
-        finish = true;
-    }
-    return finish;
 }
 
 void Talk::Render()
 {
     m_talkBallList.at(m_talkBallIndex).Render();
-    /*
-    m_talkBallList.at(m_talkBallIndex).GetCamera()->SetPosAndRot();
-
-    m_sprTextBack->DrawImage(0, 0);
-    std::vector<std::vector<std::string>> vss = m_talkBallList.at(m_talkBallIndex).GetTextList();
-    int textIndex = m_talkBallList.at(m_talkBallIndex).GetTextIndex();
-    if (vss.at(textIndex).size() >= 1)
-    {
-        m_font->DrawText_(vss.at(textIndex).at(0), 100, 730);
-    }
-
-    if (vss.at(textIndex).size() >= 2)
-    {
-        m_font->DrawText_(vss.at(textIndex).at(1), 100, 780);
-    }
-
-    if (vss.at(textIndex).size() >= 3)
-    {
-        m_font->DrawText_(vss.at(textIndex).at(2), 100, 830);
-    }
 
     if (m_isFadeIn)
     {
@@ -176,13 +138,12 @@ void Talk::Render()
     {
         m_sprFade->DrawImage(0, 0, m_FadeOutCount*255/FADE_FRAME_MAX);
     }
-    */
 }
 
 void Talk::Finalize()
 {
-    // TODO
-//    m_restore->SetPosAndRot();
+    m_camera->SetPosAndRot(m_restoreEyeX,    m_restoreEyeY,    m_restoreEyeZ,
+                           m_restoreLookAtX, m_restoreLookAtY, m_restoreLookAtZ);
 
     for (std::size_t i = 0; i < m_talkBallList.size(); ++i)
     {
@@ -205,7 +166,6 @@ void TalkBall::Init(const std::vector<std::string>& csvOneLine,
                     ISoundEffect* SE,
                     ICamera* camera)
 {
-    m_text = csvOneLine;
     m_font = font;
     m_sprite = sprite;
     m_SE = SE;
@@ -217,6 +177,7 @@ void TalkBall::Init(const std::vector<std::string>& csvOneLine,
     work.erase(remove(work.begin(), work.end(), '\"'), work.end());
     vs = split(work, '\n');
     m_text = vs;
+    m_text.resize(3);
 
     vs = split(csvOneLine.at(2), ':');
 
@@ -229,28 +190,127 @@ void TalkBall::Init(const std::vector<std::string>& csvOneLine,
     m_LookAtX = (float)std::atof(vs.at(0).c_str());
     m_LookAtY = (float)std::atof(vs.at(1).c_str());
     m_LookAtZ = (float)std::atof(vs.at(2).c_str());
+
+    m_textShow.resize(3);
 }
 
 void TalkBall::Update()
 {
     m_camera->SetPosAndRot(m_EyeX, m_EyeY, m_EyeZ, m_LookAtX, m_LookAtY, m_LookAtZ);
+    m_textIndex++;
+
+    bool finish = false;
+
+    // 文字送り処理
+    m_textShow.at(0).clear();
+    m_textShow.at(1).clear();
+    m_textShow.at(2).clear();
+
+    // 30フレーム経過してから文字の表示を始める
+    m_counter++;
+    if (m_counter < 30)
+    {
+        return;
+    }
+
+    if (m_isSEPlay == false)
+    {
+        m_isSEPlay = true;
+        m_SE->PlayMessage();
+    }
+
+    m_charCount++;
+    // 一行目
+    if (m_charCount < (int)m_text.at(0).size())
+    {
+        // マルチバイト文字は1文字で2バイトであることを考慮する
+        if (m_charCount % 2 == 0)
+        {
+            m_textShow.at(0) = m_text.at(0).substr(0, m_charCount);
+        }
+        else
+        {
+            m_textShow.at(0) = m_text.at(0).substr(0, m_charCount - 1);
+        }
+    }
+    else
+    {
+        m_textShow.at(0) = m_text.at(0);
+    }
+
+    int total = 0;
+
+    // 二行目
+    total = m_text.at(0).size() + m_text.at(1).size();
+    int secondLineCount = m_charCount - m_text.at(0).size();
+    if (m_charCount < total)
+    {
+        if (secondLineCount >= 0)
+        {
+            // マルチバイト文字は1文字で2バイトであることを考慮する
+            if (secondLineCount % 2 == 0)
+            {
+                m_textShow.at(1) = m_text.at(1).substr(0, secondLineCount);
+            }
+            else
+            {
+                m_textShow.at(1) = m_text.at(1).substr(0, secondLineCount - 1);
+            }
+        }
+    }
+    else
+    {
+        m_textShow.at(1) = m_text.at(1);
+    }
+
+    // 三行目
+    total = m_text.at(0).size() + m_text.at(1).size() + m_text.at(2).size();
+
+    int thirdLineCount = m_charCount - m_text.at(0).size() - m_text.at(1).size();
+    if (m_charCount < total)
+    {
+        if (thirdLineCount >= 0)
+        {
+            // マルチバイト文字は1文字で2バイトであることを考慮する
+            if (thirdLineCount % 2 == 0)
+            {
+                m_textShow.at(2) = m_text.at(2).substr(0, thirdLineCount);
+            }
+            else
+            {
+                m_textShow.at(2) = m_text.at(2).substr(0, thirdLineCount - 1);
+            }
+        }
+    }
+    else
+    {
+        m_textShow.at(2) = m_text.at(2);
+        m_isFinish = true;
+        m_SE->Stop();
+    }
+
 }
 
 void TalkBall::Render()
 {
     m_sprite->DrawImage(0, 0);
-    if (m_text.size() >= 1)
+    if (m_textShow.size() >= 1)
     {
-        m_font->DrawText_(m_text.at(0), 100, 730);
+        m_font->DrawText_(m_textShow.at(0), 100, 730);
     }
 
-    if (m_text.size() >= 2)
+    if (m_textShow.size() >= 2)
     {
-        m_font->DrawText_(m_text.at(1), 100, 780);
+        m_font->DrawText_(m_textShow.at(1), 100, 780);
     }
 
-    if (m_text.size() >= 3)
+    if (m_textShow.size() >= 3)
     {
-        m_font->DrawText_(m_text.at(2), 100, 830);
+        m_font->DrawText_(m_textShow.at(2), 100, 830);
     }
+}
+
+bool TalkBall::IsFinish()
+{
+    return m_isFinish;
 }

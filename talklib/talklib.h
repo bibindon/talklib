@@ -46,10 +46,14 @@ public:
               ICamera* camera);
     void Update();
     void Render();
+    bool IsFinish();
 
 private:
+    std::vector<std::string> m_textShow;
     std::vector<std::string> m_text;
     int m_textIndex = 0;
+    int m_counter = 0;
+    int m_charCount = 0;
     IFont* m_font = nullptr;
     ISprite* m_sprite = nullptr;
     ISoundEffect* m_SE = nullptr;
@@ -61,6 +65,9 @@ private:
     float m_LookAtX = 0.f;
     float m_LookAtY = 0.f;
     float m_LookAtZ = 0.f;
+
+    bool m_isSEPlay = false;
+    bool m_isFinish = false;
 };
 
 class Talk
@@ -94,6 +101,8 @@ private:
     int m_talkBallIndex = 0;
 
     ISprite* m_sprFade;
+    // 30フレームかけて表示する。
+    // 30フレームではなく500ミリ秒、でやるべきだが、それほど大きな問題とならないのでよしとする。
     const int FADE_FRAME_MAX = 30;
     bool m_isFadeIn = false;
     int m_FadeInCount = 0;

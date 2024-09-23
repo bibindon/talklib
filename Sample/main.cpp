@@ -399,10 +399,10 @@ VOID Render()
         strcpy_s(msg, 128, "Ｍキーで会話開始");
         TextDraw(g_pFont, msg, 0, 0);
         UINT numPass;
+        pEffect->SetTechnique("BasicTec");
         pEffect->Begin(&numPass, 0);
         {
             pEffect->SetMatrix("matWorldViewProj", &mat1);
-            pEffect->SetTechnique("BasicTec");
             pEffect->BeginPass(0);
             for (DWORD i = 0; i < dwNumMaterials; i++)
             {
@@ -414,8 +414,6 @@ VOID Render()
         }
         {
             pEffect->SetMatrix("matWorldViewProj", &mat2);
-            pEffect->SetTechnique("BasicTec");
-            UINT numPass;
             pEffect->BeginPass(0);
             pEffect->SetMatrix("matWorldViewProj", &mat2);
             for (DWORD i = 0; i < dwNumMaterials2; i++)
