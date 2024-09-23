@@ -321,7 +321,7 @@ HRESULT InitD3D(HWND hWnd)
     return S_OK;
 }
 
-void InitStory()
+void InitTalk()
 {
     // newはライブラリの使用者がするが、deleteはライブラリ内で行われる。
     // ちょっと良くないけど・・・まぁよし！
@@ -338,14 +338,30 @@ void InitStory()
 
 VOID Cleanup()
 {
-    SAFE_RELEASE(pMesh);
+    SAFE_RELEASE(pEffect);
+
+    for (DWORD i = 0; i < dwNumMaterials2; ++i)
+    {
+        SAFE_RELEASE(pTextures2[i]);
+    }
+    delete[] pTextures2;
+
+    delete[] pMaterials2;
+    pMaterials2 = nullptr;
+
     SAFE_RELEASE(pMesh2);
-    SAFE_RELEASE(g_pFont);
+
+    for (DWORD i = 0; i < dwNumMaterials; ++i)
+    {
+        SAFE_RELEASE(pTextures[i]);
+    }
+    delete[] pTextures;
+
     delete[] pMaterials;
     pMaterials = nullptr;
-    delete[] pTextures;
-    pTextures = nullptr;
-    SAFE_RELEASE(pEffect);
+
+    SAFE_RELEASE(pMesh);
+    SAFE_RELEASE(g_pFont);
     SAFE_RELEASE(g_pd3dDevice);
     SAFE_RELEASE(g_pD3D);
 }
@@ -460,7 +476,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 delete talk;
             }
             talk = new Talk();
-            InitStory();
+            InitTalk();
             break;
         }
         case VK_RETURN:

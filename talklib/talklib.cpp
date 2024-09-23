@@ -145,17 +145,18 @@ void Talk::Finalize()
     m_camera->SetPosAndRot(m_restoreEyeX,    m_restoreEyeY,    m_restoreEyeZ,
                            m_restoreLookAtX, m_restoreLookAtY, m_restoreLookAtZ);
 
-    for (std::size_t i = 0; i < m_talkBallList.size(); ++i)
-    {
-//        delete m_talkBallList.at(i).GetCamera();
-//        m_talkBallList.at(i).SetCamera(nullptr);
-    }
+    delete m_camera;
+    m_camera = nullptr;
+
     delete m_sprTextBack;
     m_sprTextBack = nullptr;
+
     delete m_sprFade;
     m_sprFade = nullptr;
+
     delete m_font;
     m_font = nullptr;
+
     delete m_SE;
     m_SE = nullptr;
 }
