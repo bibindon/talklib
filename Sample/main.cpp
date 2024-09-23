@@ -39,18 +39,12 @@ public:
     {
         D3DXVECTOR3 pos {(float)x, (float)y, 0.f};
         m_D3DSprite->Begin(D3DXSPRITE_ALPHABLEND);
-        RECT rect = {
-            0,
-            0,
-            static_cast<LONG>(m_width),
-            static_cast<LONG>(m_height) };
+        RECT rect = { 0,
+                      0,
+                      static_cast<LONG>(m_width),
+                      static_cast<LONG>(m_height) };
         D3DXVECTOR3 center { 0, 0, 0 };
-        m_D3DSprite->Draw(
-            m_pD3DTexture,
-            &rect,
-            &center,
-            &pos,
-            D3DCOLOR_ARGB(transparency, 255, 255, 255));
+        m_D3DSprite->Draw(m_pD3DTexture, &rect, &center, &pos, D3DCOLOR_ARGB(transparency, 255, 255, 255));
         m_D3DSprite->End();
 
     }
@@ -63,10 +57,7 @@ public:
             throw std::exception("Failed to create a sprite.");
         }
 
-        if (FAILED(D3DXCreateTextureFromFile(
-            m_pD3DDevice,
-            filepath.c_str(),
-            &m_pD3DTexture)))
+        if (FAILED(D3DXCreateTextureFromFile( m_pD3DDevice, filepath.c_str(), &m_pD3DTexture)))
         {
             throw std::exception("Failed to create a texture.");
         }
@@ -108,19 +99,18 @@ public:
 
     void Init()
     {
-        HRESULT hr = D3DXCreateFont(
-            m_pD3DDevice,
-            24,
-            0,
-            FW_NORMAL,
-            1,
-            false,
-            SHIFTJIS_CHARSET,
-            OUT_TT_ONLY_PRECIS,
-            ANTIALIASED_QUALITY,
-            FF_DONTCARE,
-            "ÇlÇr ñæí©",
-            &m_pFont);
+        HRESULT hr = D3DXCreateFont(m_pD3DDevice,
+                                    24,
+                                    0,
+                                    FW_NORMAL,
+                                    1,
+                                    false,
+                                    SHIFTJIS_CHARSET,
+                                    OUT_TT_ONLY_PRECIS,
+                                    ANTIALIASED_QUALITY,
+                                    FF_DONTCARE,
+                                    "ÇlÇr ñæí©",
+                                    &m_pFont);
     }
 
     virtual void DrawText_(const std::string& msg, const int x, const int y)
@@ -221,27 +211,36 @@ HRESULT InitD3D(HWND hWnd)
     d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
     d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
 
-    if (FAILED(g_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &g_pd3dDevice)))
+    if (FAILED(g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+                                    D3DDEVTYPE_HAL,
+                                    hWnd,
+                                    D3DCREATE_HARDWARE_VERTEXPROCESSING,
+                                    &d3dpp,
+                                    &g_pd3dDevice)))
     {
-        if (FAILED(g_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &g_pd3dDevice)))
+        if (FAILED(g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+                                        D3DDEVTYPE_HAL,
+                                        hWnd,
+                                        D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+                                        &d3dpp,
+                                        &g_pd3dDevice)))
         {
             return(E_FAIL);
         }
     }
 
-    HRESULT hr = D3DXCreateFont(
-        g_pd3dDevice,
-        20,
-        0,
-        FW_HEAVY,
-        1,
-        false,
-        SHIFTJIS_CHARSET,
-        OUT_TT_ONLY_PRECIS,
-        ANTIALIASED_QUALITY,
-        FF_DONTCARE,
-        "ÇlÇr ÉSÉVÉbÉN",
-        &g_pFont);
+    HRESULT hr = D3DXCreateFont(g_pd3dDevice,
+                                20,
+                                0,
+                                FW_HEAVY,
+                                1,
+                                false,
+                                SHIFTJIS_CHARSET,
+                                OUT_TT_ONLY_PRECIS,
+                                ANTIALIASED_QUALITY,
+                                FF_DONTCARE,
+                                "ÇlÇr ÉSÉVÉbÉN",
+                                &g_pFont);
     if FAILED(hr)
     {
         return(E_FAIL);
@@ -250,9 +249,14 @@ HRESULT InitD3D(HWND hWnd)
     LPD3DXBUFFER pD3DXMtrlBuffer = NULL;
 
     {
-        if (FAILED(D3DXLoadMeshFromX("cube.x", D3DXMESH_SYSTEMMEM,
-            g_pd3dDevice, NULL, &pD3DXMtrlBuffer, NULL,
-            &dwNumMaterials, &pMesh)))
+        if (FAILED(D3DXLoadMeshFromX("cube.x",
+                                     D3DXMESH_SYSTEMMEM,
+                                     g_pd3dDevice,
+                                     NULL,
+                                     &pD3DXMtrlBuffer,
+                                     NULL,
+                                     &dwNumMaterials,
+                                     &pMesh)))
         {
             MessageBox(NULL, "XÉtÉ@ÉCÉãÇÃì«Ç›çûÇ›Ç…é∏îsÇµÇ‹ÇµÇΩ", NULL, MB_OK);
             return E_FAIL;
@@ -266,12 +270,11 @@ HRESULT InitD3D(HWND hWnd)
             pMaterials[i] = d3dxMaterials[i].MatD3D;
             pMaterials[i].Ambient = pMaterials[i].Diffuse;
             pTextures[i] = NULL;
-            if (d3dxMaterials[i].pTextureFilename != NULL &&
-                lstrlen(d3dxMaterials[i].pTextureFilename) > 0)
+            if (d3dxMaterials[i].pTextureFilename != NULL && lstrlen(d3dxMaterials[i].pTextureFilename) > 0)
             {
                 if (FAILED(D3DXCreateTextureFromFile(g_pd3dDevice,
-                    d3dxMaterials[i].pTextureFilename,
-                    &pTextures[i])))
+                                                     d3dxMaterials[i].pTextureFilename,
+                                                     &pTextures[i])))
                 {
                     MessageBox(NULL, "ÉeÉNÉXÉ`ÉÉÇÃì«Ç›çûÇ›Ç…é∏îsÇµÇ‹ÇµÇΩ", NULL, MB_OK);
                 }
@@ -279,9 +282,14 @@ HRESULT InitD3D(HWND hWnd)
         }
     }
     {
-        if (FAILED(D3DXLoadMeshFromX("tiger.x", D3DXMESH_SYSTEMMEM,
-            g_pd3dDevice, NULL, &pD3DXMtrlBuffer, NULL,
-            &dwNumMaterials2, &pMesh2)))
+        if (FAILED(D3DXLoadMeshFromX("tiger.x",
+                                     D3DXMESH_SYSTEMMEM,
+                                     g_pd3dDevice,
+                                     NULL,
+                                     &pD3DXMtrlBuffer,
+                                     NULL,
+                                     &dwNumMaterials2,
+                                     &pMesh2)))
         {
             MessageBox(NULL, "XÉtÉ@ÉCÉãÇÃì«Ç›çûÇ›Ç…é∏îsÇµÇ‹ÇµÇΩ", NULL, MB_OK);
             return E_FAIL;
@@ -295,12 +303,11 @@ HRESULT InitD3D(HWND hWnd)
             pMaterials2[i] = d3dxMaterials2[i].MatD3D;
             pMaterials2[i].Ambient = pMaterials2[i].Diffuse;
             pTextures2[i] = NULL;
-            if (d3dxMaterials2[i].pTextureFilename != NULL &&
-                lstrlen(d3dxMaterials2[i].pTextureFilename) > 0)
+            if (d3dxMaterials2[i].pTextureFilename != NULL && lstrlen(d3dxMaterials2[i].pTextureFilename) > 0)
             {
                 if (FAILED(D3DXCreateTextureFromFile(g_pd3dDevice,
-                    d3dxMaterials2[i].pTextureFilename,
-                    &pTextures2[i])))
+                                                     d3dxMaterials2[i].pTextureFilename,
+                                                     &pTextures2[i])))
                 {
                     MessageBox(NULL, "ÉeÉNÉXÉ`ÉÉÇÃì«Ç›çûÇ›Ç…é∏îsÇµÇ‹ÇµÇΩ", NULL, MB_OK);
                 }
@@ -507,9 +514,18 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 INT WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ INT)
 {
-    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, MsgProc, 0L, 0L,
-                      GetModuleHandle(NULL), NULL, NULL, NULL, NULL,
-                      "Window1", NULL };
+    WNDCLASSEX wc = { sizeof(WNDCLASSEX),
+                      CS_CLASSDC,
+                      MsgProc,
+                      0L,
+                      0L,
+                      GetModuleHandle(NULL),
+                      NULL,
+                      NULL,
+                      NULL,
+                      NULL,
+                      "Window1",
+                      NULL };
     RegisterClassEx(&wc);
 
     RECT rect;
@@ -520,9 +536,17 @@ INT WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
     rect.top = 0;
     rect.left = 0;
 
-    HWND hWnd = CreateWindow("Window1", "Hello DirectX9 World !!",
-        WS_OVERLAPPEDWINDOW, 10, 10, rect.right, rect.bottom,
-        NULL, NULL, wc.hInstance, NULL);
+    HWND hWnd = CreateWindow("Window1",
+                             "Hello DirectX9 World !!",
+                             WS_OVERLAPPEDWINDOW,
+                             10,
+                             10,
+                             rect.right,
+                             rect.bottom,
+                             NULL,
+                             NULL,
+                             wc.hInstance,
+                             NULL);
 
     if (SUCCEEDED(InitD3D(hWnd)))
     {
